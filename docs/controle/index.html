@@ -58,7 +58,7 @@ main{padding:22px 28px;max-width:1300px;margin:0 auto}
     <div class="logo">&#128202; Dashboard CVM &middot; Rentabilidade 2026 &middot; II</div>
     <div class="sub" id="headerSub"></div>
   </div>
-  <div class="gerado">Gerado em 18/04/2026 20:01</div>
+  <div class="gerado">Gerado em 18/04/2026 20:15</div>
 </header>
 <main>
   <div class="slbl">Resumo da carteira</div>
@@ -140,6 +140,7 @@ document.getElementById('headerSub').textContent =
 // ── LEGENDA — só Lagunna e Grupo Neblina ─────────────────────────────────────
 const lagunna = DADOS.find(f => f.cnpj_raw === TOTAIS.lagunna_cnpj);
 const legendItems = [
+  {nome_curto: 'CDI', color: TOTAIS.cdi_color, virtual: false},
   ...(lagunna ? [{nome_curto: lagunna.nome_curto, color: lagunna.color, virtual: false}] : []),
   ...GRUPOS,
 ];
@@ -179,7 +180,15 @@ function getDS(tab){
     fill: false,
     borderWidth: 2.5, pointRadius: 0, borderDash: [3,3], tension: 0.1,
   }));
-  return [...dsLagunna, ...dsGrupos];
+  const dsCDI = [{
+    label: 'CDI',
+    data: CDI.map(h=>h[key]),
+    borderColor: TOTAIS.cdi_color,
+    backgroundColor: 'transparent',
+    fill: false,
+    borderWidth: 2, pointRadius: 0, borderDash: [6,3], tension: 0.1,
+  }];
+  return [...dsCDI, ...dsLagunna, ...dsGrupos];
 }
 
 function fmtY(tab,v){
