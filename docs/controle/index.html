@@ -58,7 +58,7 @@ main{padding:22px 28px;max-width:1300px;margin:0 auto}
     <div class="logo">&#128202; Dashboard CVM &middot; Rentabilidade 2026 &middot; II</div>
     <div class="sub" id="headerSub"></div>
   </div>
-  <div class="gerado">Gerado em 18/04/2026 19:52</div>
+  <div class="gerado">Gerado em 18/04/2026 20:01</div>
 </header>
 <main>
   <div class="slbl">Resumo da carteira</div>
@@ -183,7 +183,11 @@ function getDS(tab){
 }
 
 function fmtY(tab,v){
-  if(tab==='patrim') return 'R$'+Number(v/1000000).toFixed(1)+'M';
+  if(tab==='patrim'){
+    if(Math.abs(v)>=1000000) return 'R$'+Number(v/1000000).toFixed(2)+'M';
+    if(Math.abs(v)>=1000)    return 'R$'+Number(v/1000).toFixed(1)+'k';
+    return 'R$'+Number(v).toFixed(0);
+  }
   return Number(v).toFixed(tab==='diario'?4:2)+'%';
 }
 
