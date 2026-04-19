@@ -12,7 +12,7 @@ body{font-family:'IBM Plex Sans',sans-serif;background:#090d18;color:#dde2f0;min
 header{background:#0c1020;border-bottom:1px solid #1a2035;padding:16px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
 .logo{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700;letter-spacing:.1em;color:#1D9E75;text-transform:uppercase}
 .sub{font-size:10px;color:#8892a8;margin-top:3px;font-family:'IBM Plex Mono',monospace}
-.gerado{font-size:10px;color:#8892a8;font-family:'IBM Plex Mono',monospace}
+.gerado{font-size:10px;color:#8892a8;font-family:'IBM Plex Mono',monospace;text-align:right;line-height:1.7}
 main{padding:22px 28px;max-width:1300px;margin:0 auto}
 .slbl{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;color:#8892a8;text-transform:uppercase;letter-spacing:.12em;margin-bottom:12px;padding-bottom:7px;border-bottom:1px solid #1a2035;margin-top:24px}
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:8px}
@@ -58,7 +58,7 @@ main{padding:22px 28px;max-width:1300px;margin:0 auto}
     <div class="logo">&#128202; Dashboard CVM &middot; Rentabilidade 2026 &middot; II</div>
     <div class="sub" id="headerSub"></div>
   </div>
-  <div class="gerado">Gerado em 18/04/2026 22:06</div>
+  <div class="gerado">&#128197; CVM: 16/04/2026<br>Gerado em 18/04/2026 22:51</div>
 </header>
 <main>
   <div class="slbl">Resumo da carteira</div>
@@ -122,7 +122,6 @@ const fmtQtd  = v => Number(v).toLocaleString('pt-BR',{minimumFractionDigits:3,m
 document.getElementById('headerSub').textContent =
   'Informe Diario · ' + TOTAIS.dt_ini + ' → ' + TOTAIS.dt_fim + ' · 4 fundos';
 
-// ── CARDS ─────────────────────────────────────────────────────────────────────
 (function(){
   const T = TOTAIS;
   [
@@ -137,7 +136,6 @@ document.getElementById('headerSub').textContent =
   });
 })();
 
-// ── LEGENDA — só Lagunna e Grupo Neblina ─────────────────────────────────────
 const lagunna = DADOS.find(f => f.cnpj_raw === TOTAIS.lagunna_cnpj);
 const legendItems = [
   {nome_curto: 'CDI', color: TOTAIS.cdi_color, virtual: false},
@@ -149,46 +147,17 @@ legendItems.forEach(f=>{
     `<span class="legend-item"><span class="legend-sq" style="background:${f.color}${f.virtual?';opacity:0.7':''}"></span>${f.nome_curto}${f.virtual?' <span style="font-size:9px;color:#8892a8">(grupo)</span>':''}</span>`;
 });
 
-// ── GRAFICO PRINCIPAL — só Lagunna e Grupo Neblina ───────────────────────────
 let mainChart;
 
 function getDS(tab){
   const key = tab==='acum'?'rent_acum':tab==='patrim'?'patrimonio':'var_diaria';
   if(tab==='patrim'){
-    return [{
-      label: 'Carteira Total',
-      data: CART.map(h=>h[key]),
-      borderColor: TOTAIS.cart_color,
-      backgroundColor: TOTAIS.cart_color+'18',
-      fill: true,
-      borderWidth: 3, pointRadius: 0, tension: 0.1,
-    }];
+    return [{label:'Carteira Total',data:CART.map(h=>h[key]),borderColor:TOTAIS.cart_color,backgroundColor:TOTAIS.cart_color+'18',fill:true,borderWidth:3,pointRadius:0,tension:0.1}];
   }
-  const dsLagunna = lagunna ? [{
-    label: lagunna.nome_curto,
-    data: lagunna.historico.map(h=>h[key]),
-    borderColor: lagunna.color,
-    backgroundColor: 'transparent',
-    fill: false,
-    borderWidth: 2.5, pointRadius: 0, tension: 0.1,
-  }] : [];
-  const dsGrupos = GRUPOS.map(g=>({
-    label: g.nome_curto,
-    data: g.historico.map(h=>h[key]),
-    borderColor: g.color,
-    backgroundColor: 'transparent',
-    fill: false,
-    borderWidth: 2.5, pointRadius: 0, borderDash: [3,3], tension: 0.1,
-  }));
-  const dsCDI = [{
-    label: 'CDI',
-    data: CDI.map(h=>h[key]),
-    borderColor: TOTAIS.cdi_color,
-    backgroundColor: 'transparent',
-    fill: false,
-    borderWidth: 2, pointRadius: 0, borderDash: [6,3], tension: 0.1,
-  }];
-  return [...dsCDI, ...dsLagunna, ...dsGrupos];
+  const dsLagunna = lagunna ? [{label:lagunna.nome_curto,data:lagunna.historico.map(h=>h[key]),borderColor:lagunna.color,backgroundColor:'transparent',fill:false,borderWidth:2.5,pointRadius:0,tension:0.1}] : [];
+  const dsGrupos = GRUPOS.map(g=>({label:g.nome_curto,data:g.historico.map(h=>h[key]),borderColor:g.color,backgroundColor:'transparent',fill:false,borderWidth:2.5,pointRadius:0,borderDash:[3,3],tension:0.1}));
+  const dsCDI = [{label:'CDI',data:CDI.map(h=>h[key]),borderColor:TOTAIS.cdi_color,backgroundColor:'transparent',fill:false,borderWidth:2,pointRadius:0,borderDash:[6,3],tension:0.1}];
+  return [...dsCDI,...dsLagunna,...dsGrupos];
 }
 
 function fmtY(tab,v){
@@ -204,32 +173,25 @@ function renderMain(tab){
   const labels = CART.map(h=>h.dt.slice(5));
   if(mainChart) mainChart.destroy();
   mainChart = new Chart(document.getElementById('mainChart'),{
-    type:'line', data:{labels, datasets:getDS(tab)},
+    type:'line', data:{labels,datasets:getDS(tab)},
     options:{responsive:true,maintainAspectRatio:false,
       interaction:{mode:'index',intersect:false},
       plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`  ${ctx.dataset.label}: ${fmtY(tab,ctx.parsed.y)}`}}},
-      scales:{
-        x:{ticks:{autoSkip:true,maxTicksLimit:10,color:'#8892a8',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}},
-        y:{ticks:{color:'#8892a8',font:{size:10},callback:v=>fmtY(tab,v)},grid:{color:'rgba(255,255,255,0.04)'}},
-      },
+      scales:{x:{ticks:{autoSkip:true,maxTicksLimit:10,color:'#8892a8',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}},y:{ticks:{color:'#8892a8',font:{size:10},callback:v=>fmtY(tab,v)},grid:{color:'rgba(255,255,255,0.04)'}}},
     },
   });
 }
 
 function setTab(tab){
-  document.querySelectorAll('.cbox .tab-row .tab').forEach((b,i)=>{
-    b.classList.toggle('active',['acum','patrim','diario'][i]===tab);
-  });
+  document.querySelectorAll('.cbox .tab-row .tab').forEach((b,i)=>{b.classList.toggle('active',['acum','patrim','diario'][i]===tab);});
   renderMain(tab);
 }
 renderMain('acum');
 
-// ── CARDS FUNDOS ──────────────────────────────────────────────────────────────
 let activeIdx=null, detChart=null;
 
 DADOS.forEach((f,i)=>{
   const pc=f.rent>=0?'pos':'neg';
-  const qt=f.historico[f.historico.length-1].cotas_qt;
   const card=document.createElement('div');
   card.className='fc';
   card.innerHTML=`
@@ -248,7 +210,6 @@ DADOS.forEach((f,i)=>{
   document.getElementById('fundosGrid').appendChild(card);
 });
 
-// Card grupo Neblina
 GRUPOS.forEach((g,gi)=>{
   const pc=g.rent>=0?'pos':'neg';
   const card=document.createElement('div');
@@ -279,7 +240,6 @@ GRUPOS.forEach((g,gi)=>{
   document.getElementById('fundosGrid').appendChild(card);
 });
 
-// Card Carteira Total
 (function(){
   const T=TOTAIS, pc=T.cart_rent>=0?'pos':'neg';
   const card=document.createElement('div');
@@ -311,11 +271,7 @@ function renderGrupoDet(g){
   document.getElementById('detTitle').innerHTML=g.nome+' <span style="font-size:9px;background:'+g.color+'22;color:'+g.color+';border-radius:3px;padding:2px 6px">GRUPO</span>';
   document.getElementById('detSub').textContent='Consolidado · '+g.dt_ini+' → '+g.dt_fim;
   if(detChart) detChart.destroy();
-  detChart=new Chart(document.getElementById('detChart'),{
-    type:'line',
-    data:{labels:g.historico.map(h=>h.dt.slice(5)),datasets:[{label:g.nome,data:g.historico.map(h=>h.rent_acum),borderColor:g.color,backgroundColor:g.color+'18',fill:true,borderWidth:2,pointRadius:0,tension:0.1}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{autoSkip:true,maxTicksLimit:10,color:'#8892a8',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}},y:{ticks:{color:'#8892a8',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}}}},
-  });
+  detChart=new Chart(document.getElementById('detChart'),{type:'line',data:{labels:g.historico.map(h=>h.dt.slice(5)),datasets:[{label:g.nome,data:g.historico.map(h=>h.rent_acum),borderColor:g.color,backgroundColor:g.color+'18',fill:true,borderWidth:2,pointRadius:0,tension:0.1}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{autoSkip:true,maxTicksLimit:10,color:'#8892a8',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}},y:{ticks:{color:'#8892a8',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}}}}});
   const pc=g.rent>=0?'pos':'neg';
   document.getElementById('detMeta').innerHTML=[
     {lbl:'Composicao',val:'Neblina_Equity + Neblina + Neblina_II'},
@@ -331,11 +287,7 @@ function renderCartDet(){
   document.getElementById('detTitle').textContent='Carteira Total — Consolidado';
   document.getElementById('detSub').textContent='Todos os fundos · '+TOTAIS.dt_ini+' → '+TOTAIS.dt_fim;
   if(detChart) detChart.destroy();
-  detChart=new Chart(document.getElementById('detChart'),{
-    type:'line',
-    data:{labels:CART.map(h=>h.dt.slice(5)),datasets:[{label:'Carteira',data:CART.map(h=>h.rent_acum),borderColor:TOTAIS.cart_color,backgroundColor:TOTAIS.cart_color+'18',fill:true,borderWidth:2.5,pointRadius:0,tension:0.1}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{autoSkip:true,maxTicksLimit:10,color:'#8892a8',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}},y:{ticks:{color:'#8892a8',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}}}},
-  });
+  detChart=new Chart(document.getElementById('detChart'),{type:'line',data:{labels:CART.map(h=>h.dt.slice(5)),datasets:[{label:'Carteira',data:CART.map(h=>h.rent_acum),borderColor:TOTAIS.cart_color,backgroundColor:TOTAIS.cart_color+'18',fill:true,borderWidth:2.5,pointRadius:0,tension:0.1}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{autoSkip:true,maxTicksLimit:10,color:'#8892a8',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}},y:{ticks:{color:'#8892a8',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}}}}});
   const T=TOTAIS,pc=T.cart_rent>=0?'pos':'neg';
   document.getElementById('detMeta').innerHTML=[
     {lbl:'Composicao',val:'4 fundos'},
@@ -364,11 +316,7 @@ function renderDet(f,tab){
   const km={cota:'cota',rent:'rent_acum',patrim:'patrimonio',diario:'var_diaria'};
   const key=km[tab];
   if(detChart) detChart.destroy();
-  detChart=new Chart(document.getElementById('detChart'),{
-    type:'line',
-    data:{labels:f.historico.map(h=>h.dt.slice(5)),datasets:[{label:tab,data:f.historico.map(h=>h[key]),borderColor:f.color,backgroundColor:f.color+'18',fill:true,borderWidth:2,pointRadius:0,tension:0.1}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{autoSkip:true,maxTicksLimit:10,color:'#8892a8',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}},y:{ticks:{color:'#8892a8',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}}}},
-  });
+  detChart=new Chart(document.getElementById('detChart'),{type:'line',data:{labels:f.historico.map(h=>h.dt.slice(5)),datasets:[{label:tab,data:f.historico.map(h=>h[key]),borderColor:f.color,backgroundColor:f.color+'18',fill:true,borderWidth:2,pointRadius:0,tension:0.1}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{autoSkip:true,maxTicksLimit:10,color:'#8892a8',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}},y:{ticks:{color:'#8892a8',font:{size:10}},grid:{color:'rgba(255,255,255,0.04)'}}}}});
   const pc=f.rent>=0?'pos':'neg';
   document.getElementById('detMeta').innerHTML=[
     {lbl:'CNPJ',val:f.cnpj},
@@ -384,64 +332,33 @@ function renderDet(f,tab){
 }
 
 function setDTab(tab){
-  document.querySelectorAll('#detailBox .tab-row .tab').forEach((b,i)=>{
-    b.classList.toggle('active',['cota','rent','patrim','diario'][i]===tab);
-  });
+  document.querySelectorAll('#detailBox .tab-row .tab').forEach((b,i)=>{b.classList.toggle('active',['cota','rent','patrim','diario'][i]===tab);});
   if(activeIdx==='cart') renderCartDet();
   else if(typeof activeIdx==='number') renderDet(DADOS[activeIdx],tab);
 }
 
-// ── PIZZA ─────────────────────────────────────────────────────────────────────
 (function(){
   const ultimaDt=TOTAIS.dt_fim;
-  function patrimNaData(f,dt){
-    const h=f.historico.slice().reverse().find(x=>x.dt<=dt);
-    return h?h.patrimonio:0;
-  }
+  function patrimNaData(f,dt){const h=f.historico.slice().reverse().find(x=>x.dt<=dt);return h?h.patrimonio:0;}
   const labels=DADOS.map(f=>f.nome_curto);
   const vals=DADOS.map(f=>patrimNaData(f,ultimaDt));
   const cores=DADOS.map(f=>f.color);
   const total=vals.reduce((s,v)=>s+v,0);
   const rents=DADOS.map(f=>f.rent);
-
   document.getElementById('lblDataComp').textContent=ultimaDt;
-
-  new Chart(document.getElementById('pieChart'),{
-    type:'doughnut',
-    data:{labels,datasets:[{data:vals.map(v=>+v.toFixed(2)),backgroundColor:cores,borderWidth:1,borderColor:'rgba(255,255,255,0.08)'}]},
-    options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`  ${ctx.label}: ${fmtBRL(ctx.parsed)}`}}}},
-  });
-
+  new Chart(document.getElementById('pieChart'),{type:'doughnut',data:{labels,datasets:[{data:vals.map(v=>+v.toFixed(2)),backgroundColor:cores,borderWidth:1,borderColor:'rgba(255,255,255,0.08)'}]},options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`  ${ctx.label}: ${fmtBRL(ctx.parsed)}`}}}}});
   document.getElementById('pieInfo').innerHTML=vals.map((v,i)=>{
     const pct=(v/total*100).toFixed(1);
     const cls=rents[i]>=0?'pos':'neg';
-    return `<div class="pie-row">
-      <span style="width:10px;height:10px;border-radius:2px;background:${cores[i]};flex-shrink:0"></span>
-      <div>
-        <div style="font-size:11px;color:#8892a8">${labels[i]}</div>
-        <div style="font-size:13px;font-weight:600">${fmtBRL(v)} <span style="font-size:10px;color:#8892a8">(${pct}%)</span></div>
-        <div class="${cls}" style="font-size:11px;font-family:'IBM Plex Mono',monospace">${fmtPct(rents[i])}</div>
-      </div>
-    </div>`;
+    return `<div class="pie-row"><span style="width:10px;height:10px;border-radius:2px;background:${cores[i]};flex-shrink:0"></span><div><div style="font-size:11px;color:#8892a8">${labels[i]}</div><div style="font-size:13px;font-weight:600">${fmtBRL(v)} <span style="font-size:10px;color:#8892a8">(${pct}%)</span></div><div class="${cls}" style="font-size:11px;font-family:'IBM Plex Mono',monospace">${fmtPct(rents[i])}</div></div></div>`;
   }).join('')+`
     <div style="border-top:1px solid #1a2035;margin-top:8px;padding-top:10px;display:flex;align-items:center;gap:10px">
       <span style="width:10px;height:10px;border-radius:50%;background:#dde2f0;flex-shrink:0"></span>
-      <div>
-        <div style="font-size:11px;color:#8892a8">Total da Carteira</div>
-        <div style="font-size:15px;font-weight:700;color:#dde2f0">${fmtBRL(total)}</div>
-        <div style="font-size:10px;color:#8892a8;font-family:'IBM Plex Mono',monospace">em ${ultimaDt}</div>
-      </div>
+      <div><div style="font-size:11px;color:#8892a8">Total da Carteira</div><div style="font-size:15px;font-weight:700;color:#dde2f0">${fmtBRL(total)}</div><div style="font-size:10px;color:#8892a8;font-family:'IBM Plex Mono',monospace">em ${ultimaDt}</div></div>
     </div>
     <div style="border-top:1px solid #1a2035;margin-top:8px;padding-top:8px">
       <div style="font-size:10px;color:#8892a8;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;font-family:'IBM Plex Mono',monospace">Grupos · apenas visualizacao</div>
-      ${GRUPOS.map(g=>{const pc=g.rent>=0?'pos':'neg';return`<div class="pie-row" style="margin-bottom:6px">
-        <span style="width:10px;height:10px;border-radius:2px;background:${g.color};opacity:0.7;flex-shrink:0"></span>
-        <div>
-          <div style="font-size:11px;color:#8892a8">${g.nome}</div>
-          <div style="font-size:13px;font-weight:600">${fmtBRL(g.patrim_fim)}</div>
-          <div class="${pc}" style="font-size:11px;font-family:'IBM Plex Mono',monospace">${fmtPct(g.rent)}</div>
-        </div>
-      </div>`;}).join('')}
+      ${GRUPOS.map(g=>{const pc=g.rent>=0?'pos':'neg';return`<div class="pie-row" style="margin-bottom:6px"><span style="width:10px;height:10px;border-radius:2px;background:${g.color};opacity:0.7;flex-shrink:0"></span><div><div style="font-size:11px;color:#8892a8">${g.nome}</div><div style="font-size:13px;font-weight:600">${fmtBRL(g.patrim_fim)}</div><div class="${pc}" style="font-size:11px;font-family:'IBM Plex Mono',monospace">${fmtPct(g.rent)}</div></div></div>`;}).join('')}
     </div>`;
 })();
 </script>
