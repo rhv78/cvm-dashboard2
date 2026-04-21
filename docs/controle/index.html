@@ -58,7 +58,7 @@ main{padding:22px 28px;max-width:1300px;margin:0 auto}
     <div class="logo">&#128202; Dashboard CVM &middot; Rentabilidade 2026 &middot; II</div>
     <div class="sub" id="headerSub"></div>
   </div>
-  <div class="gerado">Gerado em 21/04/2026 10:27 &nbsp;·&nbsp; Última publicação CVM: 2026-04-17</div>
+  <div class="gerado">Gerado em 21/04/2026 10:40 &nbsp;·&nbsp; Última publicação CVM: 2026-04-17</div>
 </header>
 <main>
   <div class="slbl">Resumo da carteira</div>
@@ -137,10 +137,11 @@ document.getElementById('headerSub').textContent =
   });
 })();
 
-// ── LEGENDA — só Lagunna e Grupo Neblina ─────────────────────────────────────
+// ── LEGENDA — CDI, Carteira Total, Lagunna e Grupo Neblina ───────────────────
 const lagunna = DADOS.find(f => f.cnpj_raw === TOTAIS.lagunna_cnpj);
 const legendItems = [
-  {nome_curto: 'CDI', color: TOTAIS.cdi_color, virtual: false},
+  {nome_curto: 'CDI',            color: TOTAIS.cdi_color,  virtual: false},
+  {nome_curto: 'Carteira Total', color: TOTAIS.cart_color, virtual: false},
   ...(lagunna ? [{nome_curto: lagunna.nome_curto, color: lagunna.color, virtual: false}] : []),
   ...GRUPOS,
 ];
@@ -149,21 +150,25 @@ legendItems.forEach(f=>{
     `<span class="legend-item"><span class="legend-sq" style="background:${f.color}${f.virtual?';opacity:0.7':''}"></span>${f.nome_curto}${f.virtual?' <span style="font-size:9px;color:#8892a8">(grupo)</span>':''}</span>`;
 });
 
-// ── GRAFICO PRINCIPAL — só Lagunna e Grupo Neblina ───────────────────────────
+// ── GRAFICO PRINCIPAL ─────────────────────────────────────────────────────────
 let mainChart;
 
 function getDS(tab){
   const key = tab==='acum'?'rent_acum':tab==='patrim'?'patrimonio':'var_diaria';
-  if(tab==='patrim'){
-    return [{
-      label: 'Carteira Total',
-      data: CART.map(h=>h[key]),
-      borderColor: TOTAIS.cart_color,
-      backgroundColor: TOTAIS.cart_color+'18',
-      fill: true,
-      borderWidth: 3, pointRadius: 0, tension: 0.1,
-    }];
-  }
+
+  // Carteira Total aparece em todos os tabs
+  const dsCart = [{
+    label: 'Carteira Total',
+    data: CART.map(h=>h[key]),
+    borderColor: TOTAIS.cart_color,
+    backgroundColor: TOTAIS.cart_color+'18',
+    fill: tab==='patrim',
+    borderWidth: 3, pointRadius: 0, tension: 0.1,
+  }];
+
+  // No tab patrimônio mostra apenas Carteira Total
+  if(tab==='patrim') return dsCart;
+
   const dsLagunna = lagunna ? [{
     label: lagunna.nome_curto,
     data: lagunna.historico.map(h=>h[key]),
@@ -172,6 +177,7 @@ function getDS(tab){
     fill: false,
     borderWidth: 2.5, pointRadius: 0, tension: 0.1,
   }] : [];
+
   const dsGrupos = GRUPOS.map(g=>({
     label: g.nome_curto,
     data: g.historico.map(h=>h[key]),
@@ -180,6 +186,7 @@ function getDS(tab){
     fill: false,
     borderWidth: 2.5, pointRadius: 0, borderDash: [3,3], tension: 0.1,
   }));
+
   const dsCDI = [{
     label: 'CDI',
     data: CDI.map(h=>h[key]),
@@ -188,7 +195,8 @@ function getDS(tab){
     fill: false,
     borderWidth: 2, pointRadius: 0, borderDash: [6,3], tension: 0.1,
   }];
-  return [...dsCDI, ...dsLagunna, ...dsGrupos];
+
+  return [...dsCDI, ...dsCart, ...dsLagunna, ...dsGrupos];
 }
 
 function fmtY(tab,v){
